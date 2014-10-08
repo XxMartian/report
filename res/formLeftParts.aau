@@ -1,0 +1,65 @@
+import win.ui;
+/*DSG{{*/
+var winform = ..win.form(text="数据录入";left=0;top=0;right=800;bottom=400;parent=...)
+winform.add(
+button={cls="button";text="重新载入";left=9;top=263;right=90;bottom=296;z=2};
+button3={cls="button";text="打印";left=9;top=164;right=90;bottom=197;z=3};
+button4={cls="button";text="搜索";left=9;top=65;right=90;bottom=98;z=5};
+custom={cls="custom";text="custom";left=100;top=0;right=800;bottom=400;ah=1;aw=1;dt=1;edge=1;transparent=1;z=1};
+edit={cls="edit";left=17;top=29;right=88;bottom=50;edge=1;multiline=1;z=4}
+)
+/*}}*/
+
+import com.lite;
+import access
+import string
+var db=access(config.db.path)
+var repOcx = com.lite("/ReportX.ocx")
+var reportX=repOcx.createEmbed(winform.custom,"{A5DA6E97-1D4C-4708-B705-84A45716B4DD}")
+var report= reportX._object;
+winform.init=function(machine){
+	report.OpenReport(io.fullpath(config.tpl.path++"查询.rpxe"));
+	var headerTitle={'ID';'partname';'中文名';'partNO';'Model';'UnitPrice';'SafetyStock';'total1'}
+	report.SetFrozenRow(1,1)
+	var l=2
+	winform.machine=machine;
+	report.DeleteRow(2,report.RowCount-2)
+	winform.custom.update()
+	report.InvalidatePaint()
+	for rs in db.each("SELECT "++winform.machine++".*,b.total AS total1 FROM "++winform.machine++" LEFT JOIN (select partID,sum(QTY) as total from "++winform.machine++"Used group by partID) as b ON "++winform.machine++".ID = b.partID"){
+		//io.print(rs("中文名").value)
+		report.AppendRow(1);
+		for(i=1;#headerTitle;1){
+			report.SetCellValue(i,l,rs(headerTitle[i]).value)
+			report.SetCellReadOnly(i,l,true);
+			report.SetCellBorder(i,l,0,1,0)
+		}
+		if(rs("SafetyStock").value>=(rs("total1").value:0)){
+			report.SetCellBackColor(7,l,gdi.RGB( 255,0,0))
+		}
+		l++;
+	}
+	report.ValidatePaint()
+	winform.custom.redraw()
+	
+}
+//winform.init(winform.MachineName)
+winform.button.oncommand = function(id,event){
+	winform.button.disabled=true
+	winform.init(winform.machine)
+	winform.button.disabled=false
+}
+winform.button3.oncommand = function(id,event){
+	report.PrintPreview()
+	
+}
+
+winform.button4.oncommand = function(id,event){
+	if(string.trim(winform.edit.text)!=""){
+		report.Find(2,2,report.ColCount,report.RowCount,true,true,false,false,string.trim(winform.edit.text))
+	}
+}
+winform.onClose = function(hwnd,message,wParam,lParam){
+    db.close()
+}
+return winform;

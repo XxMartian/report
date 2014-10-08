@@ -1,0 +1,53 @@
+import win.ui;
+/*DSG{{*/
+mainForm = ..win.form(text="ReportX 测试";right=166;bottom=120;border="dialog frame";clipch=1;composited=1;max=false;parent=...)
+mainForm.add(
+button={cls="button";text="进货";left=19;top=7;right=142;bottom=22;z=1};
+button2={cls="button";text="库存查询";left=19;top=32;right=142;bottom=47;z=2};
+button3={cls="button";text="消耗记录";left=19;top=56;right=142;bottom=71;z=3};
+button4={cls="button";text="使用";left=19;top=81;right=142;bottom=96;z=4};
+static={cls="static";text="慢慢来、步子迈大了会扯着蛋";left=7;top=106;right=168;bottom=121;font=LOGFONT( name='仿宋_GB2312' );transparent=1;z=5}
+)
+/*}}*/
+
+import config
+import skin.sharp
+import process; 
+var prcs = process(); 
+var pBase = tonumber( skin.sharp._dll.gethandle()  ) +  0x1000;
+prcs.writeString( pBase + 0x2276D,'\x6A\0\x90\x90\x90\x90\x90' )
+prcs.writeString( pBase + 0x4034,'\x6A\0\x90\x90\x90\x90\x90' )
+prcs.writeString( pBase + 0xF4DE,'\x6A\0\x6A\0' )
+prcs.free();
+//skin.sharp.attach("/skins/wish.she")
+skin.sharp.setAero(true);
+io.open()
+action=function(a){
+	var form=loadcode("/res/formMachineSelect.aau")()
+	form.action=a
+	form.show()
+}
+
+mainForm.button4.oncommand = function(id,event){
+	//mainForm.msgbox( mainForm.button4.text );
+	action("Del")
+	
+}
+mainForm.button3.oncommand = function(id,event){
+	//mainForm.msgbox( mainForm.button3.text );
+	action("Record")
+	
+}
+
+mainForm.button2.oncommand = function(id,event){
+	//mainForm.msgbox( mainForm.button2.text );
+	action("Left")
+}
+
+
+mainForm.button.oncommand = function(id,event){
+	//mainForm.msgbox( mainForm.button.text );
+	action("Add")
+} 
+mainForm.show()
+win.loopMessage()

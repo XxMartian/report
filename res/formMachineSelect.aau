@@ -1,0 +1,19 @@
+import win.ui;
+/*DSG{{*/
+var winform = ..win.form(text="选择要操作的机器";right=274;bottom=63;border="dialog frame";parent=...)
+winform.add(
+button={cls="button";text="确认";left=205;top=20;right=263;bottom=45;z=2};
+combobox={cls="combobox";left=18;top=19;right=192;bottom=39;edge=1;items={"PVD";"PECVD";"SC"};mode="dropdown";z=1}
+)
+/*}}*/
+
+winform.combobox.selText="SC"
+winform.button.oncommand = function(id,event){
+	//winform.msgbox( winform.button.text );
+	var Form=loadcode("/res/form"+winform.action+"Parts.aau")()
+	Form.text=winform.combobox.text++"---操作"
+	Form.init(winform.combobox.selText)
+	Form.show()
+	winform.close()
+}
+return winform;
