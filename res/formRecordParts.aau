@@ -2,73 +2,114 @@ import win.ui;
 /*DSG{{*/
 var winform = ..win.form(text="数据录入";left=0;top=0;right=800;bottom=400;parent=...)
 winform.add(
-button={cls="button";text="重新载入";left=10;top=172;right=91;bottom=205;z=2};
-button2={cls="button";text="筛选";left=450;top=0;right=513;bottom=24;z=9};
-button3={cls="button";text="打印";left=11;top=124;right=92;bottom=157;z=3};
-button4={cls="button";text="搜索";left=9;top=65;right=90;bottom=98;z=5};
-custom={cls="custom";text="custom";left=100;top=30;right=800;bottom=400;ah=1;aw=1;dt=1;edge=1;transparent=1;z=1};
-datetimepick={cls="datetimepick";left=72;top=5;right=180;bottom=25;edge=1;z=6};
-datetimepick2={cls="datetimepick";left=240;top=3;right=359;bottom=23;edge=1;z=7};
-edit={cls="edit";left=17;top=30;right=88;bottom=50;edge=1;multiline=1;z=4};
-static={cls="static";text="————";left=186;top=5;right=221;bottom=20;transparent=1;z=8}
+button2={cls="button";text="筛选";left=483;top=2;right=557;bottom=28;dl=1;dt=1;z=7};
+button3={cls="button";text="打印";left=12;top=358;right=86;bottom=389;dl=1;z=2};
+button4={cls="button";text="搜索";left=12;top=57;right=86;bottom=88;dl=1;z=4};
+button7={cls="button";text="导出";left=12;top=208;right=86;bottom=238;dl=1;z=8};
+checkboxAdd={cls="checkbox";text="入库";left=379;top=6;right=425;bottom=20;dl=1;dt=1;z=11};
+checkboxUsed={cls="checkbox";text="使用";left=431;top=6;right=477;bottom=20;dl=1;dt=1;z=12};
+custom={cls="custom";text="custom";left=100;top=30;right=800;bottom=400;ah=1;aw=1;dl=1;dt=1;edge=1;transparent=1;z=1};
+datetimepick={cls="datetimepick";left=141;top=4;right=239;bottom=24;dl=1;dt=1;edge=1;z=5};
+datetimepick2={cls="datetimepick";left=269;top=4;right=367;bottom=24;dl=1;dt=1;edge=1;z=6};
+edit={cls="edit";left=17;top=30;right=88;bottom=50;dl=1;edge=1;multiline=1;z=3};
+plus={cls="plus";left=4;top=2;right=100;bottom=27;background="\res\logo.jpg";dl=1;z=13};
+static2={cls="static";text="从";left=116;top=7;right=137;bottom=21;dl=1;dt=1;transparent=1;z=9};
+static3={cls="static";text="到";left=244;top=7;right=265;bottom=21;dl=1;dt=1;transparent=1;z=10}
 )
 /*}}*/
 
-winform.button2.oncommand = function(id,event){
-	//winform.msgbox( winform.button2.text );
-	io.print(winform.datetimepick.text,winform.datetimepick2.text)
-	
-}
-import com.lite;
 import access
 import string
 var db=access(config.db.path)
-var repOcx = com.lite("/ReportX.ocx")
+//var repOcx = com.lite("/ReportX.ocx")
 var reportX=repOcx.createEmbed(winform.custom,"{A5DA6E97-1D4C-4708-B705-84A45716B4DD}")
 var report= reportX._object;
 winform.init=function(machine){
-	report.OpenReport(io.fullpath(config.tpl.path++"查询.rpxe"));
-	var headerTitle={'ID';'partname';'中文名';'partNO';'Model';'UnitPrice';'SafetyStock';'total1'}
+	report.OpenReport(io.fullpath(config.tpl.path++"统计.rpxe"));
 	report.SetFrozenRow(1,1)
+	winform.machine=machine;	
+}
+winform.button3.oncommand = function(id,event){
+	report.PrintPreview()
+}
+winform.button4.oncommand = function(id,event){
+	if(string.trim(winform.edit.text)!=""){
+		if(!report.Find(2,1,report.ColCount,report.RowCount,true,false,false,false,string.trim(winform.edit.text)))
+		{
+			if(!report.Find(2,1,report.ColCount,report.RowCount,true,true,false,false,string.trim(winform.edit.text)))
+			{
+				if(!report.Find(2,1,report.ColCount,report.RowCount,false,true,false,false,string.trim(winform.edit.text)))
+				{
+					if(report.Find(2,1,report.ColCount,report.RowCount,false,false,false,false,string.trim(winform.edit.text)))
+					{
+						winform.msgbox("未找到")
+					}
+				}
+			}
+		}
+	}
+}
+winform.onClose = function(hwnd,message,wParam,lParam){
+    db.close()
+}
+winform.button2.oncommand = function(id,event){
+	var str1=""
 	var l=2
-	winform.machine=machine;
+	var t=0
+	if(winform.checkboxAdd.checked&&winform.checkboxUsed.checked){
+		str1=""
+	}
+	elseif(winform.checkboxAdd.checked){
+		str1=" and QTY>0"
+	}
+	elseif(winform.checkboxUsed.checked){
+		str1=" and QTY<0"
+	}
+	else{
+		winform.msgbox("需选定要查询的项目","标题")
+		return;
+	}	
+	var headerTitle={'TIME';'partname';'中文名';'partNO';'Model';'UnitPrice';'QTY'}
 	report.DeleteRow(2,report.RowCount-2)
 	winform.custom.update()
 	report.InvalidatePaint()
-	for rs in db.each("SELECT "++winform.machine++".*,b.total AS total1 FROM "++winform.machine++" LEFT JOIN (select partID,sum(QTY) as total from "++winform.machine++"Used group by partID) as b ON "++winform.machine++".ID = b.partID"){
-		//io.print(rs("中文名").value)
+	var sql="select "++winform.machine++".*,b.* from "++winform.machine++" right join (select partID,QTY,TIME from "++winform.machine++"Used where TIME>=#"++winform.datetimepick.text++"# and TIME<=#"++winform.datetimepick2.text++"#"++str1++") as b on b.partID="++winform.machine++".ID order by b.partID"
+	for rs in db.each(sql){
 		report.AppendRow(1);
 		for(i=1;#headerTitle;1){
 			report.SetCellValue(i,l,rs(headerTitle[i]).value)
 			report.SetCellReadOnly(i,l,true);
 			report.SetCellBorder(i,l,0,1,0)
 		}
-		if(rs("SafetyStock").value>=(rs("total1").value:0)){
-			report.SetCellBackColor(7,l,gdi.RGB( 255,0,0))
+		if(rs("QTY").value<0){
+			report.SetCellBackColor(1,l,gdi.RGB( 0,125,125))
+			t=t+(-1*rs("QTY").value*(rs("UnitPrice").value:0))
 		}
 		l++;
 	}
+	if(t){
+		io.print(t)
+		report.SetCellValue(1,l,'维修费用')
+		report.SetCellValue(2,l,t)
+	}
 	report.ValidatePaint()
 	winform.custom.redraw()
+}
+winform.button7.oncommand = function(id,event){
+	//winform.msgbox( winform.button7.text );
 	
-}
-//winform.init(winform.MachineName)
-winform.button.oncommand = function(id,event){
-	winform.button.disabled=true
-	winform.init(winform.machine)
-	winform.button.disabled=false
-}
-winform.button3.oncommand = function(id,event){
-	report.PrintPreview()
-	
-}
-
-winform.button4.oncommand = function(id,event){
-	if(string.trim(winform.edit.text)!=""){
-		report.Find(2,2,report.ColCount,report.RowCount,true,true,false,false,string.trim(winform.edit.text))
+	var path=fsys.dlg.save("excel文件|*.xls|PDF文档|*.pdf")
+	if(path){
+		select(io.splitpath(path).ext){
+			case ".xls"{
+				report.ExportExcel(path,winform.machine,true)
+			}
+			case ".pdf"{
+				report.ExportPdf(path)
+			}
+		}
+		winform.msgbox(path,"文件保存成功")
 	}
-}
-winform.onClose = function(hwnd,message,wParam,lParam){
-    db.close()
+	
 }
 return winform;

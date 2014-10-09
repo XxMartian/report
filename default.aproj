@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="gb2312"?>
-<project ver="6" name="report" libEmbed="true" icon="..." ui="win" output="快手工程15.exe" CompanyName="aau.cn" FileDescription="report" LegalCopyright="aau.cn" ProductName="report" InternalName="report" FileVersion="0.0.0.03" ProductVersion="0.0.0.03" publishDir="/Publish/">
+<project ver="6" name="report" libEmbed="true" icon="..." ui="win" output="快手工程15.exe" CompanyName="aau.cn" FileDescription="report" LegalCopyright="aau.cn" ProductName="report" InternalName="report" FileVersion="0.0.0.20" ProductVersion="0.0.0.20" publishDir="/Publish/">
 	<file name="main.aau" path="default.main.aau" comment="default.main.aau"/>
 	<folder name="资源文件" path="res" embed="true">
-		<file name="fromRecordParts.aau" path="res\fromRecordParts.aau" comment="res\fromRecordParts.aau"/>
-		<file name="formConfirm.aau" path="res\formConfirm.aau" comment="res\formConfirm.aau"/>
-		<file name="formDelParts.aau" path="res\formDelParts.aau" comment="res\formDelParts.aau"/>
-		<file name="formLeftParts.aau" path="res\formLeftParts.aau" comment="res\formLeftParts.aau"/>
+		<file name="logo.jpg" path="res\logo.jpg" comment="res\logo.jpg"/>
+		<file name="formRecordParts.aau" path="res\formRecordParts.aau" comment="res\formRecordParts.aau"/>
 		<file name="formMachineSelect.aau" path="res\formMachineSelect.aau" comment="res\formMachineSelect.aau"/>
+		<file name="formLeftParts.aau" path="res\formLeftParts.aau" comment="res\formLeftParts.aau"/>
+		<file name="formDelParts.aau" path="res\formDelParts.aau" comment="res\formDelParts.aau"/>
 		<file name="formAddParts.aau" path="res\formAddParts.aau" comment="res\formAddParts.aau"/>
 	</folder>
 </project>

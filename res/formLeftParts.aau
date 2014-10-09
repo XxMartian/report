@@ -2,22 +2,29 @@ import win.ui;
 /*DSG{{*/
 var winform = ..win.form(text="数据录入";left=0;top=0;right=800;bottom=400;parent=...)
 winform.add(
-button={cls="button";text="重新载入";left=9;top=263;right=90;bottom=296;z=2};
-button3={cls="button";text="打印";left=9;top=164;right=90;bottom=197;z=3};
-button4={cls="button";text="搜索";left=9;top=65;right=90;bottom=98;z=5};
-custom={cls="custom";text="custom";left=100;top=0;right=800;bottom=400;ah=1;aw=1;dt=1;edge=1;transparent=1;z=1};
-edit={cls="edit";left=17;top=29;right=88;bottom=50;edge=1;multiline=1;z=4}
+button={cls="button";text="重新载入";left=9;top=336;right=89;bottom=372;dl=1;z=2};
+button2={cls="button";text="导出";left=9;top=246;right=89;bottom=282;dl=1;z=6};
+button3={cls="button";text="打印";left=9;top=155;right=89;bottom=191;dl=1;z=3};
+button4={cls="button";text="搜索";left=9;top=65;right=89;bottom=101;dl=1;z=5};
+custom={cls="custom";text="custom";left=100;top=0;right=800;bottom=400;ah=1;aw=1;dl=1;dt=1;edge=1;transparent=1;z=1};
+edit={cls="edit";left=17;top=29;right=88;bottom=50;dl=1;edge=1;multiline=1;z=4};
+plus={cls="plus";left=3;top=1;right=97;bottom=28;background="\res\logo.jpg";dl=1;z=7}
 )
 /*}}*/
 
-import com.lite;
 import access
 import string
 var db=access(config.db.path)
-var repOcx = com.lite("/ReportX.ocx")
+//var repOcx = com.lite("/ReportX.ocx")
 var reportX=repOcx.createEmbed(winform.custom,"{A5DA6E97-1D4C-4708-B705-84A45716B4DD}")
-var report= reportX._object;
+//var report= reportX._object;
 winform.init=function(machine){
+	//winform.remove("custom")
+	//winform.add( 
+		//custom={cls="custom";text="custom";left=100;top=0;right=800;bottom=400;ah=1;aw=1;dt=1;edge=1;transparent=1;z=1}; 
+	//)
+	//reportX=repOcx.createEmbed(winform.custom,"{A5DA6E97-1D4C-4708-B705-84A45716B4DD}")
+    report= reportX._object;
 	report.OpenReport(io.fullpath(config.tpl.path++"查询.rpxe"));
 	var headerTitle={'ID';'partname';'中文名';'partNO';'Model';'UnitPrice';'SafetyStock';'total1'}
 	report.SetFrozenRow(1,1)
@@ -35,7 +42,9 @@ winform.init=function(machine){
 			report.SetCellBorder(i,l,0,1,0)
 		}
 		if(rs("SafetyStock").value>=(rs("total1").value:0)){
-			report.SetCellBackColor(7,l,gdi.RGB( 255,0,0))
+			for(j=1;report.ColCount;1){
+				report.SetCellBackColor(j,l,gdi.RGB( 255,0,0))
+			}
 		}
 		l++;
 	}
@@ -56,8 +65,36 @@ winform.button3.oncommand = function(id,event){
 
 winform.button4.oncommand = function(id,event){
 	if(string.trim(winform.edit.text)!=""){
-		report.Find(2,2,report.ColCount,report.RowCount,true,true,false,false,string.trim(winform.edit.text))
+		if(!report.Find(2,1,report.ColCount,report.RowCount,true,false,false,false,string.trim(winform.edit.text)))
+		{
+			if(!report.Find(2,1,report.ColCount,report.RowCount,true,true,false,false,string.trim(winform.edit.text)))
+			{
+				if(!report.Find(2,1,report.ColCount,report.RowCount,false,true,false,false,string.trim(winform.edit.text)))
+				{
+					if(report.Find(2,1,report.ColCount,report.RowCount,false,false,false,false,string.trim(winform.edit.text)))
+					{
+						winform.msgbox("未找到")
+					}
+				}
+			}
+		}
 	}
+}
+winform.button2.oncommand = function(id,event){
+	//winform.msgbox( winform.button2.text );
+		var path=fsys.dlg.save("excel文件|*.xls|PDF文档|*.pdf")
+	if(path){
+		select(io.splitpath(path).ext){
+			case ".xls"{
+				report.ExportExcel(path,winform.machine,true)
+			}
+			case ".pdf"{
+				report.ExportPdf(path)
+			}
+		}
+		winform.msgbox(path,"文件保存成功")
+	}
+	
 }
 winform.onClose = function(hwnd,message,wParam,lParam){
     db.close()
